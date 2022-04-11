@@ -7,44 +7,39 @@
  */
 
 import React from 'react';
-import type {Node} from 'react';
 import {
   SafeAreaView,
   Text,
   View,
-  FlatList
+  FlatList,
+  Button
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from './src/screens/HomeScreen';
+import ToDoListScreen from './src/screens/ToDoListScreen';
 
-const App: () => Node = () => {
-  const DATA = [
-    {
-      description: 'Sample description',
-      title: 'First Item',
-    },
-    {
-      description: 'Sample description',
-      title: 'Second Item',
-    },
-    {
-      description: 'Sample description',
-      title: 'Third Item',
-    },
-  ];
-  const renderItem = ({item})=>{
-    return (<View style={{backgroundColor:'lightgreen',margin:4}}>        
-<Text>{item.title}</Text>
-<Text numberOfLines={2}>{item.description}</Text>
-</View>)};
-    
+const Stack = createNativeStackNavigator();
 
+const App = () => {
+  
   return (
-    <SafeAreaView>
-      <FlatList
-        data={DATA}
-        renderItem={renderItem}//(item)=>renderItem(item)}
-        keyExtractor={item => item.title}
+    <NavigationContainer>
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Welcome' }}
       />
-    </SafeAreaView>
+      <Stack.Screen
+        name="Todolistscreen"//id ofthe screen
+        component={ToDoListScreen}
+        options={{ title: 'To Do List Screen' }}
+      />
+      {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+    </Stack.Navigator>
+  </NavigationContainer>
+
   );
 };
 export default App;
