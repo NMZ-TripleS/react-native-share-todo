@@ -1,20 +1,33 @@
 import React from 'react';
-import { Text, View,Button } from 'react-native';
-import Cat from '../widgets/cat';
+import {SafeAreaView,FlatList,Text,View,TouchableOpacity} from 'react-native';
+import ToDoItem from '../widgets/ToDoItem';
+import Icon from "react-native-vector-icons/Ionicons";
 
-const HomeScreen = ({navigation}) => {
-   
-  return (
-      
-    <View style={{backgroundColor:'lightgreen'}}>
-      <Cat name="Maru" age="2" style={{color:'blue'}}/>
-      <Cat name="Jellylorum" age="5"/>
-      <Cat name="Spot" age="2"/>
-      <Button title={"GO to List"}
-      //navigate( name of the screen you want to go)
-        onPress={() => navigation.navigate('Todolistscreen')}
-      />
-    </View>
-  );
+export default class HomeScreen extends React.Component{
+  constructor(){
+    super();
+    
+    this.state={
+      todoList : [
+        {title:"Sample Title",descripiton:"sample Description"},
+        {title:"Sample Title1",descripiton:"sample Description"}],
+    }
+  }
+  
+  render(){
+    console.log("screen redenering .. . . ");
+    return(
+      <SafeAreaView style={{flex:1,backgroundColor:'lightgreen'}}>
+        <FlatList data={this.state.todoList} keyExtractor={(item)=>item.title} renderItem={({item})=><ToDoItem item={item}/>}/>
+        <TouchableOpacity onPress={()=>{
+          this.setState({
+            todoList:[...this.state.todoList,{title:"Sample Title"+this.state.todoList.length,descripiton:"sample Description"}]
+          });
+        }}
+        style={{width:60,height:60,justifyContent:'center',alignItems:'center',background:'red',width:60,position:'absolute',bottom:60,right:60,borderRadius:30,elevation:5,elevation:5,backgroundColor:'white'}}>
+          <Icon name='add-outline' size={34} color='black'/>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 }
-export default HomeScreen;
