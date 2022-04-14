@@ -16,8 +16,8 @@ import {
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './src/screens/HomeScreen';
-import ToDoListScreen from './src/screens/ToDoListScreen';
+import HomeScreen, { HomeName } from './src/screens/HomeScreen';
+import ToDoItemDetail, { ToDoDetailName } from './src/screens/ToDoItemDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,14 +27,14 @@ const App = () => {
     <NavigationContainer>
     <Stack.Navigator>
       <Stack.Screen
-        name="Home"
+        name={HomeName}
         component={HomeScreen}
         options={{ title: 'Welcome' }}
       />
       <Stack.Screen
-        name="Todolistscreen"//id ofthe screen
-        component={ToDoListScreen}
-        options={{ title: 'To Do List Screen' }}
+        name={ToDoDetailName}//id ofthe screen
+        component={ToDoItemDetail}
+        options={{ title: 'Item Detail' }}
       />
       {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
     </Stack.Navigator>
