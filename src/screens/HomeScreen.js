@@ -1,74 +1,48 @@
-import React from 'react';
+import React,{useState,useRef} from 'react';
 import {SafeAreaView,FlatList,Text,View,TextInput,Pressable,TouchableOpacity,Modal,StyleSheet} from 'react-native';
 import ToDoItem from '../widgets/ToDoItem';
 import Icon from "react-native-vector-icons/Ionicons";
 import Snackbar from 'react-native-snackbar';
 export let HomeName = "Home";
-export default class HomeScreen extends React.Component{
-  constructor(props){
-    super();
-    //console.log("Home Screen >>>>>>",props);
-    //status : 0 ( pending )
-    //status : 1 ( done )
-    this.state={
-      titleInput:"",
-      descInput:"",
-      modalVisible:false,
-      todoList : [
-        {id:0,title:"Sample Title",description:"Lorem ipsum dolor sit amet",status:0},
-        {id:1,title:"Sample Title1",description:"sample Description",status:1}
-      ],
-    }
-    this.descRef = React.createRef();
-  }
-  deleteToDoItem = (item) =>{
-    //use set state to modify state variable 
-    //this.state.todoList.pop();
 
+const HomeScreen= (props) => {
+  const [titleInput,setTitleInput] = useState("");
+  const [descInput,setDescInput] = useState("");
+  const [modalVisible,setModalVisible] = useState(false);
+  const [toDoList,setToDoList] = useState([]);
+  const descRef = useRef();
+
+
+  const addingNewItme=(newItem)=>{
+      var newId = 0;
+      if(toDoList.length>0){
+        var lastTodo = toDoList[toDoList.length-1];
+        newId = lastTodo.id+1;
+      }
+      var newTodo = {...newItem,id:newId};
+      setToDoList([...toDoList,newTodo]);
+  }
+  const deleteToDoItem = (item) =>{
+   
     Snackbar.show({
       text: 'Item Deleted',
       duration: Snackbar.LENGTH_SHORT,
       action: {
         text: 'UNDO',
         textColor: 'green',
-        onPress: () => { this.addingNewItme(item); },
+        onPress: () => { addingNewItme(item); },
       },
     });
-    this.setState({
-      todoList:this.state.todoList.filter((todo)=>todo.id!=item.id)
-    });
-    console.log("Current length of array todo list is ",this.state.todoList.length);
+    setToDoList(toDoList.filter((todo)=>todo.id!=item.id));
+    console.log("Current length of array todo list is ",toDoList.length);
   }
-  addingNewItme=(newItem)=>{
-    // if(newItem.id!=null){
-    //   this.setState({
-    //  todoList:[...this.state.todoList,newItem]
-    // });
-    // }else{
-     
-      var newId = 0;
-      if(this.state.todoList.length>0){
-        var lastTodo = this.state.todoList[this.state.todoList.length-1];
-        newId = lastTodo.id+1;
-      }
-      var newTodo = {...newItem,id:newId};
-      this.setState({
-       todoList:[...this.state.todoList,newTodo]
-      });
-    //}
-    
-  }
-  render(){
-    //console.log("screen redenering .. . . ");
-    
     return(
       <SafeAreaView style={{flex:1}}>
-        <FlatList data={this.state.todoList} 
+        <FlatList data={toDoList} 
         keyExtractor={(item)=>item.id} 
-        renderItem={({item})=><ToDoItem data={item} navigation={this.props.navigation} deleteToDoItem={this.deleteToDoItem}/>}/>
+        renderItem={({item})=><ToDoItem data={item} navigation={props.navigation} deleteToDoItem={deleteToDoItem}/>}/>
         <TouchableOpacity onPress={()=>{
-          
-          this.setState({modalVisible:true});
+          setModalVisible(true);
         }}
         style={{width:60,height:60,justifyContent:'center',alignItems:'center',width:60,position:'absolute',bottom:60,right:60,borderRadius:30,elevation:5,shadowOffset:{width:2,height:2},shadowRadius:5, backgroundColor:'white'}}>
           <Icon name='add-outline' size={34} color='black'/>
@@ -77,14 +51,14 @@ export default class HomeScreen extends React.Component{
         <Modal
           animationType="slide"
           transparent={true}
-          visible={this.state.modalVisible}>
+          visible={modalVisible}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <Text style={styles.modalText}>Create TODO</Text>
               <TextInput
                 style={styles.input}
                 returnKeyLabel='NEXT'
-                value={this.state.titleInput}
+                value={titleInput}
                 autoCapitalize='none'
                 placeholder='Enter todo title'
                 autoCorrect={false}
@@ -93,29 +67,30 @@ export default class HomeScreen extends React.Component{
                 maxLength={30}
                 multiline={false}
                 numberOfLines={1}
-                onBlur={()=>this.descRef.current.focus()}
-                onChangeText={(value)=>this.setState({titleInput:value})}
+                onBlur={()=>descRef.current.focus()}
+                onChangeText={(value)=>setTitleInput(value)}
               />
               <TextInput
-                ref={this.descRef}
+                ref={descRef}
                 style={[styles.input,styles.inputArea]}
                 returnKeyLabel='GO'
                 placeholder='Enter todo description.'
-                value={this.state.descInput}
+                value={descInput}
                 autoCapitalize='none'
                 autoCorrect={false}
                 keyboardType='default'
                 maxLength={300}
                 multiline={true}
                 numberOfLines={6}
-                onChangeText={(value)=>this.setState({descInput:value})}
+                onChangeText={(value)=>setDescInput(value)}
               />
               <Pressable
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => {
-                  this.addingNewItme({title:this.state.titleInput,description:this.state.descInput,status:0});
-
-                  this.setState({modalVisible:false,titleInput:"",descInput:""});
+                  addingNewItme({title:titleInput,description:descInput,status:0});
+                  setModalVisible(false);
+                  setTitleInput("");
+                  setDescInput("");
                   }}>
                 <Text style={styles.textStyle}>SAVE</Text>
               </Pressable>
@@ -124,7 +99,6 @@ export default class HomeScreen extends React.Component{
         </Modal>
       </SafeAreaView>
     );
-  }
 }
 
 const styles = StyleSheet.create({
@@ -181,3 +155,5 @@ const styles = StyleSheet.create({
     textAlignVertical:'top'
   }
 });
+
+export default HomeScreen;
