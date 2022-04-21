@@ -1,5 +1,5 @@
 import React,{useState,useRef} from 'react';
-import {SafeAreaView,FlatList,Text,View,TextInput,Pressable,TouchableOpacity,Modal,StyleSheet} from 'react-native';
+import {SafeAreaView,Platform,FlatList,Text,View,TextInput,Pressable,TouchableOpacity,Modal,StyleSheet} from 'react-native';
 import ToDoItem from '../widgets/ToDoItem';
 import Icon from "react-native-vector-icons/Ionicons";
 import Snackbar from 'react-native-snackbar';
@@ -22,6 +22,7 @@ const HomeScreen= (props) => {
       var newTodo = {...newItem,id:newId};
       setToDoList([...toDoList,newTodo]);
   }
+  
   const deleteToDoItem = (item) =>{
    
     Snackbar.show({
@@ -54,7 +55,7 @@ const HomeScreen= (props) => {
           visible={modalVisible}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.modalText}>Create TODO</Text>
+              <Text style={[styles.modalText,{color: 'green'}]}>Create TODO </Text>
               <TextInput
                 style={styles.input}
                 returnKeyLabel='NEXT'
