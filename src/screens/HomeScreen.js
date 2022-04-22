@@ -1,8 +1,11 @@
-import React,{useState,useRef} from 'react';
+import React,{useState,useRef,useEffect} from 'react';
 import {SafeAreaView,Platform,FlatList,Text,View,TextInput,Pressable,TouchableOpacity,Modal,StyleSheet} from 'react-native';
 import ToDoItem from '../widgets/ToDoItem';
 import Icon from "react-native-vector-icons/Ionicons";
 import Snackbar from 'react-native-snackbar';
+//import { todoDB,createDummyTodos, closeDb } from '../database/db';
+import Realm, { BSON } from 'realm';
+
 export let HomeName = "Home";
 
 const HomeScreen= (props) => {
@@ -11,7 +14,44 @@ const HomeScreen= (props) => {
   const [modalVisible,setModalVisible] = useState(false);
   const [toDoList,setToDoList] = useState([]);
   const descRef = useRef();
-
+  const [runUseEffect,setRunUseEffect] = useState(false);
+  const TodoSchema = {
+      name: "Todo",
+      properties: {
+      _id: "objectId",
+      title: "string",
+      description: "string?",
+      status:"int"
+      },
+      primaryKey: "_id",
+  };
+  //line one take 20 sec await async future 
+  //line two take 3 sec
+  //line three take 4 sec
+  const createDummyTodos = (realm)=>{ 
+    realm.write(() => {
+        realm.create("Todo", {
+          _id: new BSON.ObjectID(),
+          title: "go grocery shopping",
+          description: "Open",
+          status:0,
+        });
+        console.log(`created two todos`);
+    });
+}
+  useEffect(()=>{
+    async function createRealm(){
+      const realm = await Realm.open({
+        schema: [TodoSchema],
+      });
+      console.log("database created!");
+      createDummyTodos(realm);
+      setToDoList(realm.objects("Todo"));
+      //realm.close();
+      console.log("database destroyed!");
+    }
+    createRealm();
+  },[runUseEffect]);
 
   const addingNewItme=(newItem)=>{
       var newId = 0;
@@ -22,7 +62,6 @@ const HomeScreen= (props) => {
       var newTodo = {...newItem,id:newId};
       setToDoList([...toDoList,newTodo]);
   }
-  
   const deleteToDoItem = (item) =>{
    
     Snackbar.show({
@@ -43,7 +82,8 @@ const HomeScreen= (props) => {
         keyExtractor={(item)=>item.id} 
         renderItem={({item})=><ToDoItem data={item} navigation={props.navigation} deleteToDoItem={deleteToDoItem}/>}/>
         <TouchableOpacity onPress={()=>{
-          setModalVisible(true);
+          //setModalVisible(true);
+          setRunUseEffect(!runUseEffect);
         }}
         style={{width:60,height:60,justifyContent:'center',alignItems:'center',width:60,position:'absolute',bottom:60,right:60,borderRadius:30,elevation:5,shadowOffset:{width:2,height:2},shadowRadius:5, backgroundColor:'white'}}>
           <Icon name='add-outline' size={34} color='black'/>
@@ -88,6 +128,7 @@ const HomeScreen= (props) => {
               <Pressable
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => {
+                  // schema : id, title, description, status
                   addingNewItme({title:titleInput,description:descInput,status:0});
                   setModalVisible(false);
                   setTitleInput("");
