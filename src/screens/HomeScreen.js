@@ -1,10 +1,9 @@
-import React,{useState,useRef,useEffect} from 'react';
-import {SafeAreaView,Platform,FlatList,Text,View,TextInput,Pressable,TouchableOpacity,Modal,StyleSheet} from 'react-native';
-import ToDoItem from '../widgets/ToDoItem';
+import React, { useEffect, useRef, useState } from 'react';
+import { FlatList, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from "react-native-vector-icons/Ionicons";
-import Snackbar from 'react-native-snackbar';
 //import { todoDB,createDummyTodos, closeDb } from '../database/db';
-import Realm, { BSON } from 'realm';
+import Realm from 'realm';
+import ToDoItem from '../widgets/ToDoItem';
 
 export let HomeName = "Home";
 
@@ -12,13 +11,13 @@ const HomeScreen= (props) => {
   const [titleInput,setTitleInput] = useState("");
   const [descInput,setDescInput] = useState("");
   const [modalVisible,setModalVisible] = useState(false);
-  const [toDoList,setToDoList] = useState([]);
+  const [toDoList,setToDoList] = useState([]);  
+  const [realm,setRealmDB] = useState();
   const descRef = useRef();
-  const [runUseEffect,setRunUseEffect] = useState(false);
   const TodoSchema = {
       name: "Todo",
       properties: {
-      _id: "objectId",
+      _id: "int",
       title: "string",
       description: "string?",
       status:"int"
@@ -28,12 +27,15 @@ const HomeScreen= (props) => {
   //line one take 20 sec await async future 
   //line two take 3 sec
   //line three take 4 sec
-  const createDummyTodos = (realm)=>{ 
+  const createDummyTodo = ()=>{ 
+    var todos = realm.objects("Todo");
+    var id = todos.length==0? 0: todos[todos.length-1]['_id'];
+    console.log("Last inserted id : ",todos.length);
     realm.write(() => {
         realm.create("Todo", {
-          _id: new BSON.ObjectID(),
-          title: "go grocery shopping",
-          description: "Open",
+          _id: ++id,
+          title: titleInput,
+          description: descInput,
           status:0,
         });
         console.log(`created two todos`);
@@ -44,46 +46,68 @@ const HomeScreen= (props) => {
       const realm = await Realm.open({
         schema: [TodoSchema],
       });
-      console.log("database created!");
-      createDummyTodos(realm);
+      setRealmDB(realm);
+      console.log("Database created...");
       setToDoList(realm.objects("Todo"));
-      //realm.close();
-      console.log("database destroyed!");
+      console.log("Data has been initialized...")
     }
     createRealm();
-  },[runUseEffect]);
+    
+    return async function (){
+      realm.close();
+      setRealmDB();
+      console.log("Database connection closed...")
+    };
+  },[]);
 
-  const addingNewItme=(newItem)=>{
-      var newId = 0;
-      if(toDoList.length>0){
-        var lastTodo = toDoList[toDoList.length-1];
-        newId = lastTodo.id+1;
-      }
-      var newTodo = {...newItem,id:newId};
-      setToDoList([...toDoList,newTodo]);
+  // const addingNewItme=(newItem)=>{
+  //     var newId = 0;
+  //     if(toDoList.length>0){
+  //       var lastTodo = toDoList[toDoList.length-1];
+  //       newId = lastTodo._id+1;
+  //     }
+  //     var newTodo = {...newItem,id:newId};
+  //     setToDoList([...toDoList,newTodo]);
+  // } 
+  const updateTodoItem = (id) =>{
+    const todos = realm.objects("Todo");
+    const todo = todos.filtered(`_id ==${id}`);
+
+    console.log("The following item is likely to be updated ...\n",JSON.stringify(todo));
+    
+    realm.write(()=>{
+      todo.status = 0
+    });
+    setToDoList( realm.objects("Todo"));
   }
   const deleteToDoItem = (item) =>{
-   
-    Snackbar.show({
-      text: 'Item Deleted',
-      duration: Snackbar.LENGTH_SHORT,
-      action: {
-        text: 'UNDO',
-        textColor: 'green',
-        onPress: () => { addingNewItme(item); },
-      },
+    const todos = realm.objects("Todo");
+    const todo = todos.filtered(`_id ==${item._id}`);
+    console.log("The following item is likely to be updated ...\n",JSON.stringify(todo));
+    realm.write(()=>{
+      realm.delete(todo);
     });
-    setToDoList(toDoList.filter((todo)=>todo.id!=item.id));
-    console.log("Current length of array todo list is ",toDoList.length);
+    setToDoList( realm.objects("Todo"));
+    
+    // Snackbar.show({
+    //   text: 'Item Deleted',
+    //   duration: Snackbar.LENGTH_SHORT,
+    //   action: {
+    //     text: 'UNDO',
+    //     textColor: 'green',
+    //     onPress: () => { addingNewItme(item); },
+    //   },
+    // });
+    // setToDoList(toDoList.filter((todo)=>todo._id!=item._id));
+    // console.log("Current length of array todo list is ",toDoList.length);
   }
     return(
       <SafeAreaView style={{flex:1}}>
         <FlatList data={toDoList} 
-        keyExtractor={(item)=>item.id} 
-        renderItem={({item})=><ToDoItem data={item} navigation={props.navigation} deleteToDoItem={deleteToDoItem}/>}/>
+        keyExtractor={(item)=>item._id} 
+        renderItem={({item})=><ToDoItem data={item} navigation={props.navigation} deleteToDoItem={deleteToDoItem} updateTodoItem={updateTodoItem}/>}/>
         <TouchableOpacity onPress={()=>{
-          //setModalVisible(true);
-          setRunUseEffect(!runUseEffect);
+          setModalVisible(true);
         }}
         style={{width:60,height:60,justifyContent:'center',alignItems:'center',width:60,position:'absolute',bottom:60,right:60,borderRadius:30,elevation:5,shadowOffset:{width:2,height:2},shadowRadius:5, backgroundColor:'white'}}>
           <Icon name='add-outline' size={34} color='black'/>
@@ -129,7 +153,7 @@ const HomeScreen= (props) => {
                 style={[styles.button, styles.buttonClose]}
                 onPress={() => {
                   // schema : id, title, description, status
-                  addingNewItme({title:titleInput,description:descInput,status:0});
+                  createDummyTodo({title:titleInput,description:descInput,status:0});
                   setModalVisible(false);
                   setTitleInput("");
                   setDescInput("");
